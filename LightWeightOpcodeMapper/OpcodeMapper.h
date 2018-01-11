@@ -52,6 +52,9 @@ int OpcodeMapper<T>::Map(BYTE * opcode_buf, INT32 opcode_length)
 template <typename T>
 T OpcodeMapper<T>::Invoke()
 {
+	if (opcode_buf == NULL)
+		throw;
+
 	DWORD dummy;
 	VirtualProtect(opcode_buf, opcode_length, PAGE_EXECUTE_READ, &dummy);
 	auto const function_ptr = (T(*)())(opcode_buf);
