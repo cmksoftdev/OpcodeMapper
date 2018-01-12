@@ -29,7 +29,6 @@ template <typename T>
 OpcodeMapper<T>::OpcodeMapper()
 {
 	allocated_memory = 4096;
-	opcode_buf = (BYTE*)VirtualAllocEx(GetCurrentProcess(), 0, allocated_memory, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 }
 
 template <typename T>
@@ -39,13 +38,13 @@ OpcodeMapper<T>::OpcodeMapper(INT32 allocated_memory)
 		throw;
 
 	this->allocated_memory = allocated_memory;
-	opcode_buf = (BYTE*)VirtualAllocEx(GetCurrentProcess(), 0, this->allocated_memory, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 }
 
 template <typename T>
 OpcodeMapper<T>::~OpcodeMapper()
 {
-	free(opcode_buf);
+	if (opcode_buf!=NULL)
+		VirtualFree(opcode_buf, 0, MEM_RELEASE);
 }
 
 // Copies opcode to executable memory
@@ -55,6 +54,7 @@ int OpcodeMapper<T>::Map(BYTE * opcode_buf, INT32 opcode_length)
 	if (this->opcode_buf == NULL || opcode_length > allocated_memory)
 		return -1;
 
+	this->opcode_buf = (BYTE*)VirtualAllocEx(GetCurrentProcess(), 0, allocated_memory, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	for (size_t i = 0; i < opcode_length; i++)
 		this->opcode_buf[i] = opcode_buf[i];
 
@@ -71,6 +71,6 @@ T OpcodeMapper<T>::Invoke()
 	VirtualProtect(opcode_buf, opcode_length, PAGE_EXECUTE_READ, &dummy);
 	auto const function_ptr = (T(*)())(opcode_buf);
 	T result = function_ptr();
-	VirtualFree(opcode_buf, 0, MEM_RELEASE);
+	
 	return result;
 }
