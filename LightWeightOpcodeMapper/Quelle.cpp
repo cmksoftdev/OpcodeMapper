@@ -16,7 +16,7 @@ void main()
 	om1->Map(buf, 6);
 	int i = om1->Invoke();
 
-	OpcodeMapper<char>* om2 = new OpcodeMapper<char>();
+	OpcodeMapper<char>* om2 = new OpcodeMapper<char>(8192);
 	om2->Map(buf, 6);
 	unsigned char c = om2->Invoke();
 

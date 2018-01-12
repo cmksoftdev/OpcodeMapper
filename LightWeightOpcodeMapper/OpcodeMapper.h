@@ -9,6 +9,7 @@ class OpcodeMapper
 {
 public:
 	OpcodeMapper();
+	OpcodeMapper(INT32 allocated_memory);
 	~OpcodeMapper();
 	int Map(BYTE* opcode_buf, INT32 opcode_length);
 	T Invoke();
@@ -16,6 +17,7 @@ public:
 private:
 	BYTE* opcode_buf;
 	INT32 opcode_length;
+	INT32 allocated_memory;
 };
 
 
@@ -26,7 +28,18 @@ private:
 template <typename T>
 OpcodeMapper<T>::OpcodeMapper()
 {
-	this->opcode_buf = (BYTE*)VirtualAllocEx(GetCurrentProcess(), 0, 4096, MEM_COMMIT, PAGE_EXECUTE_READWRITE); // 4kbyte allocated. increase it if needed.
+	allocated_memory = 4096;
+	opcode_buf = (BYTE*)VirtualAllocEx(GetCurrentProcess(), 0, allocated_memory, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+}
+
+template <typename T>
+OpcodeMapper<T>::OpcodeMapper(INT32 allocated_memory)
+{
+	if (allocated_memory < 4096)
+		throw;
+
+	this->allocated_memory = allocated_memory;
+	opcode_buf = (BYTE*)VirtualAllocEx(GetCurrentProcess(), 0, this->allocated_memory, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 }
 
 template <typename T>
@@ -39,13 +52,12 @@ OpcodeMapper<T>::~OpcodeMapper()
 template <typename T>
 int OpcodeMapper<T>::Map(BYTE * opcode_buf, INT32 opcode_length)
 {
-	if (this->opcode_buf == NULL)
+	if (this->opcode_buf == NULL || opcode_length > allocated_memory)
 		return -1;
 
 	for (size_t i = 0; i < opcode_length; i++)
-	{
 		this->opcode_buf[i] = opcode_buf[i];
-	}
+
 	return 0;
 }
 
