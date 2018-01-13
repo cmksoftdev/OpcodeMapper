@@ -3,9 +3,11 @@
 #if defined(WINDOWS)  
 	#include <windows.h>
 	#define valloc VirtualAllocEx
+	#define vfree VirtualFree
 #elif defined(LINUX)  
 	#include <sys/mman.h>
 	#define valloc mmap
+	#define vfree munmap
 #endif
 
 #include <vector>
@@ -52,14 +54,14 @@ template <typename T>
 OpcodeMapper<T>::~OpcodeMapper()
 {
 	if (opcode_buf!=NULL)
-		VirtualFree(opcode_buf, 0, MEM_RELEASE);
+		vfree(opcode_buf, 0, MEM_RELEASE);
 }
 
 // Copies opcode to executable memory
 template <typename T>
 int OpcodeMapper<T>::Map(BYTE * opcode_buf, INT32 opcode_length)
 {
-	if (this->opcode_buf == NULL || opcode_length > allocated_memory)
+	if (opcode_buf == NULL || opcode_length > allocated_memory)
 		return -1;
 
 	this->opcode_buf = (BYTE*)valloc(GetCurrentProcess(), 0, allocated_memory, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
