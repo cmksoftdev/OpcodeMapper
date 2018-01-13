@@ -1,4 +1,5 @@
 #include <iostream>
+#define WINDOWS
 #include "OpcodeMapper.h"
 
 // Test

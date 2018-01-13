@@ -1,5 +1,13 @@
 #pragma once
-#include <windows.h>
+
+#if defined(WINDOWS)  
+	#include <windows.h>
+	#define valloc VirtualAllocEx
+#elif defined(LINUX)  
+	#include <sys/mman.h>
+	#define valloc mmap
+#endif
+
 #include <vector>
 
 using namespace std;
@@ -54,7 +62,7 @@ int OpcodeMapper<T>::Map(BYTE * opcode_buf, INT32 opcode_length)
 	if (this->opcode_buf == NULL || opcode_length > allocated_memory)
 		return -1;
 
-	this->opcode_buf = (BYTE*)VirtualAllocEx(GetCurrentProcess(), 0, allocated_memory, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	this->opcode_buf = (BYTE*)valloc(GetCurrentProcess(), 0, allocated_memory, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	for (size_t i = 0; i < opcode_length; i++)
 		this->opcode_buf[i] = opcode_buf[i];
 
